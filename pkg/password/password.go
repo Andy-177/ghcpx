@@ -3,10 +3,11 @@ package password
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/pbkdf2"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"hash"
@@ -63,10 +64,37 @@ func SaveConfig(cfg *Config) error {
 	return os.WriteFile(path, data, 0644)
 }
 
+func pbkdf2Key(password, salt []byte, iter, keyLen int, h func() hash.Hash) []byte {
+	prf := hmac.New(h, password)
+	hashLen := prf.Size()
+	numBlocks := (keyLen + hashLen - 1) / hashLen
+
+	dk := make([]byte, 0, numBlocks*hashLen)
+	block := make([]byte, hashLen)
+	u := make([]byte, hashLen)
+
+	for blockNum := 1; blockNum <= numBlocks; blockNum++ {
+		prf.Reset()
+		prf.Write(salt)
+		binary.Write(prf, binary.BigEndian, uint32(blockNum))
+		u = prf.Sum(u[:0])
+		copy(block, u)
+
+		for i := 2; i <= iter; i++ {
+			prf.Reset()
+			prf.Write(u)
+			u = prf.Sum(u[:0])
+			for j := 0; j < hashLen; j++ {
+				block[j] ^= u[j]
+			}
+		}
+		dk = append(dk, block...)
+	}
+	return dk[:keyLen]
+}
+
 func deriveKey(password string, salt []byte) []byte {
-	return pbkdf2.Key([]byte(password), salt, pbkdf2Iter, keyLen, func() hash.Hash {
-		return sha256.New()
-	})
+	return pbkdf2Key([]byte(password), salt, pbkdf2Iter, keyLen, sha256.New)
 }
 
 func aesEncrypt(plaintext, key, iv []byte) ([]byte, error) {
