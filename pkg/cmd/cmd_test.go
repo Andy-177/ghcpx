@@ -81,18 +81,19 @@ func TestCmd_Run(t *testing.T) {
 		}
 	})
 
-	t.Run("env/GITHUB_TOKEN", func(t *testing.T) {
+	t.Run("--token flag", func(t *testing.T) {
 		commitUseCase := commit_mock.NewMockInterface(t)
 		commitUseCase.EXPECT().
 			Do(mock.Anything, input).Return(nil)
 		r := Runner{
 			NewGitHub:         newGitHub(t, client.Option{Token: "YOUR_TOKEN"}),
-			Env:               newEnv(t, map[string]string{envGitHubToken: "YOUR_TOKEN", envGitHubAPI: ""}),
+			Env:               newEnv(t, map[string]string{envGitHubAPI: ""}),
 			NewInternalRunner: newInternalRunner(InternalRunner{CommitUseCase: commitUseCase}),
 		}
 		args := []string{
 			cmdName,
 			commitCmdName,
+			"--token", "YOUR_TOKEN",
 			"-u", "owner",
 			"-r", "repo",
 			"-m", "commit-message",
@@ -108,7 +109,7 @@ func TestCmd_Run(t *testing.T) {
 	t.Run("NoGitHubToken", func(t *testing.T) {
 		r := Runner{
 			NewGitHub:         newGitHub(t, client.Option{}),
-			Env:               newEnv(t, map[string]string{envGitHubToken: ""}),
+			Env:               newEnv(t, map[string]string{envGitHubAPI: ""}),
 			NewInternalRunner: newInternalRunner(InternalRunner{}),
 		}
 		args := []string{
