@@ -1,4 +1,4 @@
-# ghcp [![go](https://github.com/int128/ghcp/actions/workflows/go.yaml/badge.svg)](https://github.com/int128/ghcp/actions/workflows/go.yaml) [![GoDoc](https://godoc.org/github.com/int128/ghcp?status.svg)](https://godoc.org/github.com/int128/ghcp)
+# ghcp [![go](https://github.com/int128/ghcp/actions/workflows/go.yaml/badge.svg)](https://github.com/int128/ghcp/actions/workflows/go.yaml)
 
 This is a release engineering tool for GitHub.
 It depends on GitHub APIs and works without git installation.
@@ -14,6 +14,8 @@ It provides the following features:
 
 ## Getting Started
 
+### 1. Install
+
 You can install the latest release from [GitHub Releases](https://github.com/int128/ghcp/releases) or Homebrew.
 
 ```sh
@@ -25,7 +27,68 @@ unzip /tmp/ghcp.zip -d ~/bin
 brew install int128/ghcp/ghcp
 ```
 
-You need to get a personal access token from the [settings](https://github.com/settings/tokens) and set it to `GITHUB_TOKEN` environment variable or `--token` option.
+### 2. Set up password
+
+Run the following command to set up a password:
+
+```sh
+ghcp passwd set <password>
+```
+
+This creates `ghcp.json` in the same directory as the binary, containing the SHA256 hash of the password.
+
+### 3. Store GitHub Token
+
+Get a personal access token from the [settings](https://github.com/settings/tokens) and store it with the password:
+
+```sh
+ghcp <password> token <github_token>
+```
+
+The token is encrypted with AES-256-CBC and stored in `ghcp.json`.
+
+### 4. Use
+
+All commands require the password as the first argument:
+
+```sh
+ghcp <password> commit -r OWNER/REPO -m MESSAGE file1 file2
+```
+
+The password is used to decrypt the GitHub Token from `ghcp.json`.
+
+
+## Password Management
+
+### Set password
+
+```sh
+ghcp passwd set <password>
+```
+
+### Change password
+
+Decrypts the token with the old password, re-encrypts with the new one:
+
+```sh
+ghcp passwd change <old_password> <new_password>
+```
+
+### Store token
+
+Encrypts and stores the GitHub Token using the password:
+
+```sh
+ghcp <password> token <github_token>
+```
+
+### `--token` override
+
+You can still use the `--token` flag to bypass the password system:
+
+```sh
+ghcp commit --token <token> -r OWNER/REPO -m MESSAGE file1 file2
+```
 
 
 ### Commit files to a branch
@@ -33,13 +96,13 @@ You need to get a personal access token from the [settings](https://github.com/s
 To commit files to the default branch:
 
 ```sh
-ghcp commit -r OWNER/REPO -m MESSAGE file1 file2
+ghcp <password> commit -r OWNER/REPO -m MESSAGE file1 file2
 ```
 
 To commit files to `feature` branch:
 
 ```sh
-ghcp commit -r OWNER/REPO -b feature -m MESSAGE file1 file2
+ghcp <password> commit -r OWNER/REPO -b feature -m MESSAGE file1 file2
 ```
 
 If `feature` branch does not exist, ghcp will create it from the default branch.
@@ -47,7 +110,7 @@ If `feature` branch does not exist, ghcp will create it from the default branch.
 To create `feature` branch from `develop` branch:
 
 ```sh
-ghcp commit -r OWNER/REPO -b feature --parent=develop -m MESSAGE file1 file2
+ghcp <password> commit -r OWNER/REPO -b feature --parent=develop -m MESSAGE file1 file2
 ```
 
 If `feature` branch already exists, ghcp will fail.
@@ -85,13 +148,13 @@ Flags:
 To create an empty commit to the default branch:
 
 ```sh
-ghcp empty-commit -r OWNER/REPO -m MESSAGE
+ghcp <password> empty-commit -r OWNER/REPO -m MESSAGE
 ```
 
 To create an empty commit to the branch:
 
 ```sh
-ghcp empty-commit -r OWNER/REPO -b BRANCH -m MESSAGE
+ghcp <password> empty-commit -r OWNER/REPO -b BRANCH -m MESSAGE
 ```
 
 If the branch does not exist, ghcp creates a branch from the default branch.
@@ -100,7 +163,7 @@ It the branch exists, ghcp updates the branch by fast-forward.
 To create an empty commit to a new branch from the parent branch:
 
 ```sh
-ghcp empty-commit -r OWNER/REPO -b BRANCH --parent PARENT -m MESSAGE
+ghcp <password> empty-commit -r OWNER/REPO -b BRANCH --parent PARENT -m MESSAGE
 ```
 
 If the branch exists, it will fail.
@@ -128,13 +191,13 @@ Flags:
 To fork repository `UPSTREAM/REPO` and create `feature` branch from the default branch:
 
 ```sh
-ghcp fork-commit -u UPSTREAM/REPO -b feature -m MESSAGE file1 file2
+ghcp <password> fork-commit -u UPSTREAM/REPO -b feature -m MESSAGE file1 file2
 ```
 
 To fork repository `UPSTREAM/REPO` and create `feature` branch from `develop` branch of the upstream:
 
 ```sh
-ghcp fork-commit -u UPSTREAM/REPO -b feature --parent develop -m MESSAGE file1 file2
+ghcp <password> fork-commit -u UPSTREAM/REPO -b feature --parent develop -m MESSAGE file1 file2
 ```
 
 If the branch already exists, ghcp will fail.
@@ -164,25 +227,25 @@ Flags:
 To create a pull request from `feature` branch to the default branch:
 
 ```sh
-ghcp pull-request -r OWNER/REPO -b feature --title TITLE --body BODY
+ghcp <password> pull-request -r OWNER/REPO -b feature --title TITLE --body BODY
 ```
 
 To create a pull request from `feature` branch to the `develop` branch:
 
 ```sh
-ghcp pull-request -r OWNER/REPO -b feature --base develop --title TITLE --body BODY
+ghcp <password> pull-request -r OWNER/REPO -b feature --base develop --title TITLE --body BODY
 ```
 
 To create a pull request from `feature` branch of `OWNER/REPO` repository to the default branch of `UPSTREAM/REPO` repository:
 
 ```sh
-ghcp pull-request -r OWNER/REPO -b feature --base-repo UPSTREAM/REPO --title TITLE --body BODY
+ghcp <password> pull-request -r OWNER/REPO -b feature --base-repo UPSTREAM/REPO --title TITLE --body BODY
 ```
 
 To create a pull request from `feature` branch of `OWNER/REPO` repository to the default branch of `UPSTREAM/REPO` repository:
 
 ```sh
-ghcp pull-request -r OWNER/REPO -b feature --base-repo UPSTREAM/REPO --base feature --title TITLE --body BODY
+ghcp <password> pull-request -r OWNER/REPO -b feature --base-repo UPSTREAM/REPO --base feature --title TITLE --body BODY
 ```
 
 If an open pull request already exists, ghcp does nothing.
@@ -210,7 +273,7 @@ Flags:
 To upload files to the release associated to tag `v1.0.0`:
 
 ```sh
-ghcp release -r OWNER/REPO -t v1.0.0 dist/
+ghcp <password> release -r OWNER/REPO -t v1.0.0 dist/
 ```
 
 If the release does not exist, it will create a release.
@@ -219,7 +282,7 @@ If the tag does not exist, it will create a tag from the default branch and crea
 To create a tag and release on commit `COMMIT_SHA` and upload files to the release:
 
 ```sh
-ghcp release -r OWNER/REPO -t v1.0.0 --target COMMIT_SHA dist/
+ghcp <password> release -r OWNER/REPO -t v1.0.0 --target COMMIT_SHA dist/
 ```
 
 If the tag already exists, it ignores the target commit.
@@ -249,7 +312,7 @@ Global Flags:
       --api string         GitHub API v3 URL (v4 will be inferred) [$GITHUB_API]
       --debug              Show debug logs
   -C, --directory string   Change to directory before operation
-      --token string       GitHub API token [$GITHUB_TOKEN]
+      --token string       GitHub API token (bypasses password)
 ```
 
 ### GitHub Enterprise
@@ -261,6 +324,18 @@ export GITHUB_API=https://github.example.com/api/v3/
 ```
 
 GitHub API v4 URL will be automatically inferred from the v3 URL by resolving the relative path `../graphql`.
+
+
+### Config file
+
+`ghcp.json` is stored in the same directory as the binary:
+
+```json
+{
+  "password": "<sha256 hash>",
+  "github_token": "<aes-256-cbc encrypted token>"
+}
+```
 
 
 ## Contributions
