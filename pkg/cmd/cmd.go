@@ -199,12 +199,12 @@ func (r *Runner) runPasswordChange(args []string) int {
 	}
 	newHash := password.HashPassword(args[1])
 	if cfg.GitHubToken != "" {
-		token, err := password.DecryptToken(cfg.GitHubToken, args[0])
+		token, err := password.DecryptToken(cfg.GitHubToken, args[0], cfg.Password)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: could not decrypt token: %v\n", err)
 			return exitCodeError
 		}
-		encrypted, err := password.EncryptToken(token, args[1])
+		encrypted, err := password.EncryptToken(token, args[1], newHash)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: could not encrypt token: %v\n", err)
 			return exitCodeError
@@ -234,7 +234,7 @@ func (r *Runner) runTokenCommand(args []string) int {
 		fmt.Fprintln(os.Stderr, "Error: incorrect password")
 		return exitCodeError
 	}
-	encrypted, err := password.EncryptToken(args[0], r.password)
+	encrypted, err := password.EncryptToken(args[0], r.password, cfg.Password)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not encrypt token: %v\n", err)
 		return exitCodeError
@@ -280,7 +280,7 @@ func (r *Runner) newInternalRunner(o *globalOptions) (*InternalRunner, error) {
 		if cfg.GitHubToken == "" {
 			return nil, fmt.Errorf("no token in ghcp.json. Run 'ghcp <password> token <token>' first")
 		}
-		token, err := password.DecryptToken(cfg.GitHubToken, r.password)
+		token, err := password.DecryptToken(cfg.GitHubToken, r.password, cfg.Password)
 		if err != nil {
 			return nil, fmt.Errorf("could not decrypt token (wrong password?): %w", err)
 		}
