@@ -44,7 +44,7 @@ var knownCommandNames = []string{
 
 var Set = wire.NewSet(
 	wire.Bind(new(Interface), new(*Runner)),
-	wire.Struct(new(Runner), "*"),
+	wire.Struct(new(Runner), "Env", "NewGitHub", "NewInternalRunner"),
 	wire.Struct(new(InternalRunner), "*"),
 )
 

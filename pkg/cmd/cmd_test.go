@@ -109,7 +109,7 @@ func TestCmd_Run(t *testing.T) {
 	t.Run("NoGitHubToken", func(t *testing.T) {
 		r := Runner{
 			NewGitHub:         newGitHub(t, client.Option{}),
-			Env:               newEnv(t, map[string]string{envGitHubAPI: ""}),
+			Env:               newEnv(t, nil),
 			NewInternalRunner: newInternalRunner(InternalRunner{}),
 		}
 		args := []string{
